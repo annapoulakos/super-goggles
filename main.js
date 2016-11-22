@@ -114,6 +114,19 @@ module.exports.loop = function () {
         }
     }
 
+    var towers = _.filter(Game.structures, structure => structure.structureType == STRUCTURE_TOWER);
+    _.forEach(towers, tower => {
+        var structure = tower.pos.findClosestByRange(FIND_STRUCTURES, { filter: structure => structure.hits < structure.hitsMax });
+        if (structure) {
+            tower.repair(structure);
+        }
+
+        var hostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        if (hostile) {
+            tower.attack(hostile);
+        }
+    });
+
     for (var name in Game.creeps) {
         var creep = Game.creeps[name];
 

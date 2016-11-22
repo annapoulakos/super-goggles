@@ -8,7 +8,7 @@ var MessageBus = {
     },
     Read: function () {
         if (this.messages.length) {
-            return this.messagse.unshift();
+            return this.messages.unshift();
         }
 
         return this.noop;
