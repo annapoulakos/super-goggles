@@ -26,29 +26,15 @@ var Builder = {
         this[action](creep);
     },
     withdraw: function (creep) {
-        var sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (structure) => {
-                switch (structure.structureType) {
-                    //case STRUCTURE_SPAWN: return structure.energy > 200;
-                    //case STRUCTURE_EXTENSION: return structure.energy > 0;
-                    case STRUCTURE_CONTAINER: return structure.store[RESOURCE_ENERGY] > 0;
-                    default: return false;
-                }
-            }
-        });
+        var source = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0});
+        if (!source) {
+            source = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_EXTENSION && s.energy > (s.energyCapacity / 2)});
+        }
 
-        if (sources.length > 0) {
-            if (creep.withdraw(sources[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-                creep.say('Withdrawing');
-            }
-        } else {
-            sources = creep.room.find(FIND_STRUCTURES, { filter: structure => structure.structureType == STRUCTURE_EXTENSION && structure.energy > (structure.energyCapacity / 2)});
-            if (sources.length > 0) {
-                if (creep.withdraw(sources[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(sources[0]);
-                    creep.say('Withdrawing');
-                }
+        if (source) {
+            if (creep.withdraw(source, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.say('Withdraw');
             }
         }
     },
@@ -58,18 +44,16 @@ var Builder = {
         if (lowHealth.length > 0) {
             this.doRepair(creep);
         } else {
+            var priorities = this.getBuildPriority(creep.room);
 
-        }
-
-        var priorities = this.getBuildPriority(creep.room);
-
-        if (priorities.length > 0) {
-            if (creep.build(priorities[0].site) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(priorities[0].site);
-                creep.say('Building');
+            if (priorities.length > 0) {
+                if (creep.build(priorities[0].site) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(priorities[0].site);
+                    creep.say('Building');
+                }
+            } else {
+                this.doRepair(creep);
             }
-        } else {
-            this.doRepair(creep);
         }
     },
     doRepair: function (creep) {

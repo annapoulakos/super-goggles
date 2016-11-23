@@ -1,4 +1,5 @@
-var Cleanup = require('utility.cleanup'),
+var Utility = require('utility'),
+    Cleanup = require('utility.cleanup'),
     Spawn = require('utility.spawn'),
     SpawnManager = require('utility.spawn-manager'),
     Constants = require('constants'),
@@ -44,9 +45,6 @@ function make (schematic, role) {
 
 module.exports.loop = function () {
     Cleanup();
-
-    SpawnManager.Initialize();
-    //SpawnManager.QueueWorker(Game.spawns['Spawn1']);
 
     var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
     var donkeys = _.filter(Game.creeps, (creep) => creep.memory.role == 'donkey');
@@ -99,40 +97,6 @@ module.exports.loop = function () {
         }
     }
 
-    // TODO: V2 Role Management
-    var V2Roles = {
-        packHorse: require('role.pack-horse.v2'),
-        upgrader: require('role.upgrader.v2')
-    };
-    var v2Creeps = _.filter(Game.creeps, creep => creep.memory.isV2);
-
-    if (v2Creeps.length < 4) {
-        var tier = 'Tier1', type = [], memory = {};
-
-        if (Game.rooms['W8N3'].energyAvailable > 550) {
-            tier = 'Tier3';
-        } else if (Game.rooms['W8N3'].energyAvailable > 400) {
-            tier = 'Tier2';
-        }
-
-        var v2PackHorses = _.filter(v2Creeps, creep => creep.memory.role == 'packhorse-v2');
-        if (v2PackHorses.length < 1) {
-            type = V2Roles.packHorse.body[tier];
-            memory = V2Roles.packHorse.memory;
-        } else {
-            type = V2Roles.upgrader.body[tier];
-            memory = V2Roles.upgrader.memory;
-        }
-
-        var name = Game.spawns['Spawn1'].createCreep(type, undefined, memory);
-        switch (name) {
-            case '': break;
-            case ERR_BUSY: break;
-            case ERR_NOT_ENOUGH_ENERGY: break;
-            default: console.log('Building new and improved worker, ' + name + ' (' + tier + ' - ' + memory.role + '), from the broken pieces of ' + Memory.lastCreepName + '.');
-        }
-    }
-
     for (var name in Game.rooms) {
         if (!energy[name]) {
             energy[name] = 0;
@@ -148,31 +112,24 @@ module.exports.loop = function () {
         }
     }
 
-    /*var towers = _.filter(Game.structures, structure => structure.structureType == STRUCTURE_TOWER);
+    var towers = _.filter(Game.structures, structure => structure.structureType == STRUCTURE_TOWER);
     _.forEach(towers, tower => {
-        var structure = tower.pos.findClosestByRange(FIND_STRUCTURES, { filter: structure => structure.hits < structure.hitsMax });
-        if (structure) {
-            tower.repair(structure);
-        }
+        // var structure = tower.pos.findClosestByRange(FIND_STRUCTURES, { filter: structure => structure.hits < structure.hitsMax });
+        // if (structure) {
+        //     tower.repair(structure);
+        // }
 
         var hostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
         if (hostile) {
             tower.attack(hostile);
         }
-    });*/
+    });
 
     for (var name in Game.creeps) {
         var creep = Game.creeps[name];
 
         if (Roles[creep.memory.role]) {
             Roles[creep.memory.role].execute(creep);
-        }
-
-        if (creep.memory.role == 'upgrader-v2') {
-            V2Roles.upgrader.execute(creep);
-        }
-        if (creep.memory.role == 'packhorse-v2') {
-            V2Roles.packHorse.execute(creep);
         }
     }
 };
