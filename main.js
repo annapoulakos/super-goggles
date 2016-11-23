@@ -1,3 +1,5 @@
+require('creep-extensions');
+
 var Utility = require('utility'),
     Cleanup = require('utility.cleanup'),
     Spawn = require('utility.spawn'),
@@ -11,7 +13,7 @@ var Utility = require('utility'),
         miner: require('role.miner'),
         donkey: require('role.donkey'),
         repairer: require('role.repairer'),
-        packhorse: require('role.pack-horse')
+        packhorse: require('role.packhorse')
     };
 
 var energy = {};
@@ -55,7 +57,7 @@ module.exports.loop = function () {
 
     var creeps = _.filter(Game.creeps, (creep) => !creep.memory.isV2);
 
-    if (creeps.length < 18) {
+    if (creeps.length < 14) {
         var name = '';
         var role = 'miner';
         var tier = 'Tier1';
@@ -130,8 +132,5 @@ module.exports.loop = function () {
     for (var name in Game.creeps) {
         var creep = Game.creeps[name];
 
-        if (Roles[creep.memory.role]) {
-            Roles[creep.memory.role].execute(creep);
-        }
-    }
+        creep.jpExecute();    }
 };
