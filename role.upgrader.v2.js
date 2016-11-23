@@ -8,8 +8,9 @@ var Upgrader = {
         Tier3: [WORK,WORK,WORK,WORK,CARRY,CARRY,MOVE]
     },
     memory: {
-        role: 'upgrader-v2'
-    }
+        role: 'upgrader-v2',
+        isV2: true
+    },
     execute: function (creep) {
         var result = creep.upgradeController(creep.room.controller);
 
@@ -19,11 +20,14 @@ var Upgrader = {
                 creep.say('Moving...');
                 break;
             case ERR_NOT_ENOUGH_ENERGY:
-                MessageBus.Send({
-                    event: 'NEED_ENERGY',
-                    id: creep.name
-                });
-                creep.say('Need Energy');
+                if (!creep.memory.sentMessage) {
+                    MessageBus.Send({
+                        event: 'NEED_ENERGY',
+                        id: creep.name
+                    });
+                    creep.say('Need Energy');
+                    creep.memory.sentMessage = true;
+                }
                 break;
             case OK:
                 creep.say('Upgrade');

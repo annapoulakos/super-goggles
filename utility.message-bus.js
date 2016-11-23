@@ -1,14 +1,17 @@
 var MessageBus = {
-    messages: [],
     noop: {
         event: 'noop'
     },
     Send: function (payload) {
-        this.messages.push(payload);
+        console.log(payload.id + ' requested ' + payload.event);
+        Memory.messages.push(payload);
     },
     Read: function () {
-        if (this.messages.length) {
-            return this.messages.unshift();
+        if (!Memory.messages) {
+            Memory.messages = [];
+        }
+        if (Memory.messages.length) {
+            return Memory.messages.shift();
         }
 
         return this.noop;
