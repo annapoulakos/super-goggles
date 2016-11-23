@@ -55,7 +55,7 @@ module.exports.loop = function () {
 
     var creeps = _.filter(Game.creeps, (creep) => !creep.memory.isV2);
 
-    if (creeps.length < 12) {
+    if (creeps.length < 18) {
         var name = '';
         var role = 'miner';
         var tier = 'Tier1';
@@ -85,6 +85,8 @@ module.exports.loop = function () {
             type = 'General'; role = 'repairer';
         } else if (packHorses.length < 1) {
             type = 'Transport'; role = 'packhorse';
+        } else {
+            type = 'General'; role = 'upgrader';
         }
 
         name = make(TieredSchematics[tier][type], role);

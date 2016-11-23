@@ -1,3 +1,5 @@
+var Utility = require('utility');
+
 var PackHorse = {
     execute: function (creep) {
         if (creep.carry.energy == 0) {
@@ -15,7 +17,7 @@ var PackHorse = {
         }
     },
     doWork: function (creep) {
-        var target = creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: c => c.carry.energy < (c.carryCapacity / 2)});
+        var target = creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: c => !c.jpHasRole('donkey') && c.carry.energy < (c.carryCapacity / 2)});
 
         if (target) {
             var result = creep.transfer(target, RESOURCE_ENERGY);
