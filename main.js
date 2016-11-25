@@ -1,4 +1,5 @@
 require('creep-extensions');
+require('tower-extensions');
 
 var Utility = require('utility'),
     Cleanup = require('utility.cleanup'),
@@ -25,19 +26,23 @@ var Schematics = {
 
 var TieredSchematics = {
     Tier1: {
-        Worker: [WORK,WORK,MOVE],
-        Transport: [CARRY,MOVE,MOVE],
-        General: [WORK,CARRY,MOVE]
+        Worker: [WORK,WORK,MOVE,MOVE],
+        Transport: [CARRY,CARRY,CARRY,MOVE,MOVE,MOVE],
+        General: [WORK,WORK,CARRY,MOVE]
     },
     Tier2: {
-        Worker: [WORK,WORK,WORK,WORK,MOVE],
+        Worker: [WORK,WORK,WORK,WORK,MOVE,MOVE],
         Transport: [CARRY,CARRY,MOVE,MOVE,MOVE],
         General: [WORK,WORK,CARRY,MOVE,MOVE]
     },
     Tier3: {
-        Worker: [WORK,WORK,WORK,WORK,WORK,WORK,MOVE],
+        Worker: [WORK,WORK,WORK,WORK,WORK,MOVE,MOVE],
         Transport: [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE],
         General: [WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE]
+    },
+    Tier4: {
+        Worker: [WORK,WORK,WORK,WORK,WORK,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE],
+        Transport: [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE]
     }
 };
 
@@ -57,16 +62,20 @@ module.exports.loop = function () {
 
     var creeps = _.filter(Game.creeps, (creep) => !creep.memory.isV2);
 
-    if (creeps.length < 14) {
+    if (creeps.length < 13) {
         var name = '';
         var role = 'miner';
         var tier = 'Tier1';
         var type = 'Worker';
 
-        if (creeps[0].room.energyAvailable > 650) {
-            tier = 'Tier3';
-        } else if (creeps[0].room.energyAvailable > 300) {
+        var availableEnergy = Game.rooms['W8N3'].energyAvailable;
+
+        if (availableEnergy <= 300) {
+            tier = 'Tier1';
+        } else if (availableEnergy <= 500) {
             tier = 'Tier2';
+        } else if (availableEnergy <= 600) {
+            tier = 'Tier3';
         }
 
         if (miners.length == 0) {
@@ -116,21 +125,9 @@ module.exports.loop = function () {
         }
     }
 
-    var towers = _.filter(Game.structures, structure => structure.structureType == STRUCTURE_TOWER);
-    _.forEach(towers, tower => {
-        // var structure = tower.pos.findClosestByRange(FIND_STRUCTURES, { filter: structure => structure.hits < structure.hitsMax });
-        // if (structure) {
-        //     tower.repair(structure);
-        // }
+    // Tower Execution Loop
+    _.filter(Game.structures, s => s.structureType == STRUCTURE_TOWER).forEach(t => t.jpExecute());
 
-        var hostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-        if (hostile) {
-            tower.attack(hostile);
-        }
-    });
-
-    for (var name in Game.creeps) {
-        var creep = Game.creeps[name];
-
-        creep.jpExecute();    }
+    // Creep Execution Loop
+    _.filter(Game.creeps, c => c).forEach(c => c.jpExecute());
 };
