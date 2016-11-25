@@ -1,11 +1,22 @@
 var MessageBus = require('utility.message-bus');
 
 var Upgrader = {
+    version: 2,
+    role: 'upgrader',
+    startingMemory: {
+        role: 'upgrader-v2',
+        isV2: true
+    },
+    schematics: [
+        { work: 2, carry: 1, move: 1 },
+        { work: 4, carry: 1, move: 2 },
+        { work: 5, carry: 3, move: 3 }
+    ],
     type: 'upgrader-v2',
     body: {
         Tier1: [WORK,WORK,CARRY,MOVE],
-        Tier2: [WORK,WORK,WORK,CARRY,MOVE],
-        Tier3: [WORK,WORK,WORK,WORK,CARRY,CARRY,MOVE]
+        Tier2: [WORK,WORK,WORK,CARRY,MOVE,MOVE],
+        Tier3: [WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE]
     },
     memory: {
         role: 'upgrader-v2',
