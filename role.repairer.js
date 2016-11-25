@@ -26,16 +26,49 @@ var Repairer = {
         }
     },
     doRepair: function (creep) {
-        var targets = this.getRepairPriority(creep.room);
+        // Repair containers first, so other creeps don't stop working.
+        
+        var structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER && s.hits < s.hitsMax});
+        if (structure) {
+            this.repair(structure, creep);
+            return;
+        }
 
-        if (targets.length > 0) {
-            if (creep.repair(targets[0].structure) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(targets[0].structure);
-                creep.say('Repairing');
-            }
+        // Repair roads second, so we keep things running smoothly
+        var road = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_ROAD && s.hits < s.hitsMax});
+        if (road) {
+            this.repair(road, creep);
+            return;
+        }
+
+        // Repair non-walls next
+        var structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType != STRUCTURE_CONTAINER && s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_WALL && s.hits < s.hitsMax});
+        if (structure) {
+            this.repair(structure, creep);
+        }
+
+        // Finally, repair walls
+        var walls = creep.room.find(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_WALL && s.hits < s.hitsMax});
+        walls.sort((a,b) => b.hits - a.hits);
+
+        if (walls.length) {
+            this.repair(walls[0], creep);
+        }
+    },
+    repair: function (target, creep) {
+        creep.memory.targeting = {
+            id: target.id || target.name,
+            type: target.structureType
+        };
+
+        if (creep.repair(target) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(target);
         }
     },
     getRepairPriority: function (room) {
+
+
+
         var structures = room.find(FIND_STRUCTURES, { filter: structure => structure.hits < structure.hitsMax });
         var priorityValues = structures.map(structure => {
             var priority = 1000;
