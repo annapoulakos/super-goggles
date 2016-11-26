@@ -27,21 +27,11 @@ var Upgrader = {
         this[action](creep);
     },
     withdraw: function (creep) {
-        var sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (structure) => {
-                switch (structure.structureType) {
-                    //case STRUCTURE_SPAWN: return structure.energy > 200;
-                    //case STRUCTURE_EXTENSION: return structure.energy > 0;
-                    case STRUCTURE_CONTAINER: return structure.store[RESOURCE_ENERGY] > 0;
-                    default: return false;
-                }
-            }
-        });
-
-        if (sources.length > 0) {
-            if (creep.withdraw(sources[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-                creep.say('Withdrawing');
+        var source = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: s => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0});
+        if (source) {
+            if (creep.withdraw(source, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source);
+                creep.say('Withdraw');
             }
         }
     },
