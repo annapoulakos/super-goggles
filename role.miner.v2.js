@@ -35,7 +35,7 @@ var Miner = {
         if (source) {
             var harvest = creep.harvest(source);
 
-            switch (source) {
+            switch (harvest) {
                 case ERR_NOT_IN_RANGE: creep.moveTo(source); creep.say('Moving'); break;
                 case ERR_NOT_ENOUGH_RESOURCES: creep.say('Empty'); break;
                 case OK: creep.say('Mining'); break;
