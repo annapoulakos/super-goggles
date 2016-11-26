@@ -1,7 +1,11 @@
 var Utility = require('utility'),
-    Constants = require('constants');
+    Constants = require('constants'),
+    StringBuilder = require('utility.strings');
 
 var Miner = {
+    log: function (m) {
+        StringBuilder.log('miner', m);
+    },
     role: 'miner.v2',
     getOptimalBuild: function (energy) {
         var workParts = energy < 550? (((energy - Constants.PartCosts.MOVE) / Constants.PartCosts.WORK)|0): 5;
