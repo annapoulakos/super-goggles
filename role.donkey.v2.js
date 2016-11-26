@@ -1,4 +1,5 @@
-var StringBuilder = require('utility.strings');
+var StringBuilder = require('utility.strings'),
+    Constants = require('constants');
 
 var Donkey = {
     log: function (m) {
@@ -6,7 +7,7 @@ var Donkey = {
     },
     role: 'donkey.v2',
     getOptimalBuild: function (energy) {
-        var counts = (energy / 100)|0;
+        var counts = (energy / (Constants.PartCosts.CARRY + Constants.PartCosts.MOVE))|0;
 
         if (counts > 10) {
             counts = 10;
@@ -88,6 +89,7 @@ var Donkey = {
                 case OK:
                     if (creep.carry.energy == 0) {
                         creep.memory.working = false;
+                        creep.memory.depositTarget = false;
                         break;
                     }
 
