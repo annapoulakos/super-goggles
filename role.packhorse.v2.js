@@ -1,64 +1,96 @@
-var MessageBus = require('utility.message-bus');
+var MessageBus = require('utility.message-bus'),
+    StringBuilder = require('utility.strings'),
+    Utility = require('utility'),
+    Constants = require('constants');
 
 var PackHorse = {
-    type: 'packhorse-v2',
-    body: {
-        Tier1: [CARRY,CARRY,MOVE,MOVE,MOVE],
-        Tier2: [CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE],
-        Tier3: [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE]
+    log: function (m) { StringBuilder.log('packhorse', m); },
+    getOptimalBuild: function (energy) {
+        var counts = (energy / (Constants.PartCosts.CARRY + Constants.PartCosts.MOVE))|0;
+
+        counts = Utility.clamp(counts, 1, 10);
+
+        return {
+            CARRY: counts,
+            MOVE: counts
+        }
     },
-    memory: {
-        role: 'packhorse-v2',
-        currentTask: {event: 'REFILL'},
-        isV2: true
+    defaultTask: { sender: 'self', resource: RESOURCE_ENERGY },
+    refillEnergy: function (creep) {
+        if (creep.carry.energy == creep.carryCapacity) {
+            return;
+        }
+
+        var target = creep.pos.findClosestByRange(FIND_STRUCTURES, { filter: s => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0 });
+        if (target) {
+            var result = creep.withdraw(target);
+
+            switch (result) {
+                case ERR_NOT_IN_RANGE: 
+                    creep.moveTo(target);
+                    break;
+            }
+        }
+    },
+    giveEnergy: function (creep) {
+        var target = Game.getObjectById(creep.memory.currentTask.sender);
+
+        if (target == null) {
+            creep.memory.currentTask = this.defaultTask;
+            this.refillEnergy(creep);
+            return;
+        }
+
+        var result = creep.transfer(target);
+
+        switch (result) {
+            case ERR_INVALID_TARGET: 
+                creep.memory.currentTask = this.defaultTask;
+                break;
+            case ERR_NOT_IN_RANGE: 
+                creep.moveTo(target); 
+                break;
+            case ERR_NOT_ENOUGH_RESOURCES: 
+                MessageBus.RedoRequest(creep.memory.currentTask);
+                break;
+            case ERR_FULL:
+                target.memory.request = false;
+                creep.memory.currentTask = this.defaultTask;
+                break;
+            case OK: 
+
+        }
     },
     execute: function (creep) {
+        creep.memory.currentTask = creep.memory.currentTask || null
+
+        if (creep.carry.energy == 0) {
+            creep.memory.currentTask = this.defaultTask;
+        }
+
+        if (creep.carry.energy == creep.carryCapacity && creep.memory.sender == 'self') {
+            creep.memory.currentTask = MessageBus.ReceiveNext(RESOURCE_ENERGY);
+        }
+
+        if (creep.memory.currentTask == null) {
+            creep.memory.currentTask = this.defaultTask;
+        }
+
+        switch (creep.memory.sender) {
+            case 'self':
+                this.refillEnergy(creep);
+                break;
+            default: 
+                this.giveEnergy(creep);
+                break;
+        }
+
+
+        return;
         var action = creep.memory.currentTask;
 
         if (action.event == 'noop') {
             creep.memory.currentTask = MessageBus.Read();
-        }
-
-        switch(creep.memory.currentTask.event) {
-            case 'NEED_ENERGY': 
-                var target = Game.getObjectById(creep.memory.currentTask.id);
-                if (target == null) {
-                    creep.memory.currentTask = {event: 'noop'};
-                } else {
-                    if (creep.transfer(target) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(target);
-                        creep.say('Moving');
-                    }
-
-                    if (target && target.carry.energy == target.carryCapacity) {
-                        target.memory.sentMessage = false;
-                        if (creep.carry.energy > (creep.carryCapacity / 2)) {
-                            creep.memory.currentTask = {event: 'noop'};
-                        } else {
-                            creep.memory.currentTask = {event: 'REFILL'};
-                        }
-                    }
-                }
-                
-                break;
-            case 'REFILL':
-                if (creep.carry.energy == creep.carryCapacity) {
-                    creep.memory.currentTask = {event: 'noop'};
-                }
-
-                var closest = creep.pos.findClosestByRange(FIND_STRUCTURES, { filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > creep.carryCapacity});
-                if (closest) {
-                    if (creep.withdraw(closest, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(closest);
-                        creep.say('Moving');
-                    }
-                }
-                break;
-            case 'noop':
-                if (creep.carry.energy < creep.carryCapacity) {
-                    creep.memory.currentTask = {event: 'REFILL'};
-                }
-            default: break;
         }
     }
 };
