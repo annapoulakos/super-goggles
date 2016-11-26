@@ -4,6 +4,24 @@ var SquadManager = {
     log: function (message) {
         StringBuilder.log('squad-manager', message);
     },
+    AddWorker: function (room, type, name) {
+        switch (type) {
+            case 'miner': 
+                room.memory.squads.production.forEach(squad => {
+                    if (squad.miner.current.length < squad.miner.require) {
+                        squad.miner.current.push(name);
+                    }
+                });
+                break;
+            case 'donkey':
+                room.memory.squads.production.forEach(squad => {
+                    if (squad.donkey.current.length < squad.donkey.require) {
+                        squad.donkey.current.push(name);
+                    }
+                });
+                break;
+        }
+    },
     QueueCreep: function (room) {
         if (!room.memory.squads) {
             this.log('Room has no squad configuration. Building a new squad configuration.');
@@ -32,7 +50,7 @@ var SquadManager = {
 
         var needsProduction = this.checkProductionNeeds(room.memory.squads.production);
         if (needsProduction) {
-            this.log('Production squad member required.');
+            this.log(`Production squad member '${needsProduction}' required.`);
             return needsProduction;
         }
 
@@ -102,19 +120,19 @@ var SquadManager = {
             },
             infrastructure: {
                 builder: {
-                    require: 1,
+                    require: 0,
                     current: []
                 },
                 repairer: {
-                    require: 1,
+                    require: 0,
                     current: []
                 },
                 upgrader: {
-                    require: 4,
+                    require: 0,
                     current: []
                 },
                 packhorse: {
-                    require: 1,
+                    require: 0,
                     current: []
                 },
             }
