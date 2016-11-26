@@ -31,5 +31,12 @@ module.exports = {
         }
 
         return body;
+    },
+    clamp: function (value, min, max) {
+        return value < min
+            ? min
+            : (value > max
+                ? max
+                : value);
     }
 };
