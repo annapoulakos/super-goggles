@@ -1,11 +1,14 @@
-var Utility = require('utility');
+var Utility = require('utility'),
+    Constants = require('constants');
 
 var Miner = {
     role: 'miner.v2',
     getOptimalBuild: function (energy) {
-        var workParts = energy < 550? (((energy - 50) / 10)|0): 5;
-        var moveParts = ((energy - (100* workParts)) / 50)|0;
-        moveParts = moveParts > 10? 10: moveParts;
+        var workParts = energy < 550? (((energy - Constants.PartCosts.MOVE) / Constants.PartCosts.WORK)|0): 5;
+        var moveParts = ((energy - (Constants.PartCosts.WORK * workParts)) / Constants.PartCosts.MOVE)|0;
+
+        workParts = Utility.clamp(workParts, 1, 5);
+        moveParts = Utility.clamp(moveParts, 1, 10);
 
         return {
             WORK: workParts,
