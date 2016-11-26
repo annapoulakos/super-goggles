@@ -1,26 +1,19 @@
 var MessageBus = require('utility.message-bus');
 
 var Upgrader = {
-    version: 2,
-    role: 'upgrader',
-    startingMemory: {
-        role: 'upgrader-v2',
-        isV2: true
-    },
-    schematics: [
-        { work: 2, carry: 1, move: 1 },
-        { work: 4, carry: 1, move: 2 },
-        { work: 5, carry: 3, move: 3 }
-    ],
-    type: 'upgrader-v2',
-    body: {
-        Tier1: [WORK,WORK,CARRY,MOVE],
-        Tier2: [WORK,WORK,WORK,CARRY,MOVE,MOVE],
-        Tier3: [WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE]
-    },
-    memory: {
-        role: 'upgrader-v2',
-        isV2: true
+    role: 'upgrader.v2',
+    getOptimalBuild: function (energy) {
+        var workParts = ((energy - 100) / 100)|0,
+            carryParts = ((energy - 150) / 50)|0,
+            moveParts = ((energy - 150) / 50)|0;
+
+        workParts = workParts > 8? 8: workParts;
+        moveParts = moveParts > 10? 10: moveParts;
+        return {
+            WORK: workParts,
+            CARRY: carryParts,
+            MOVE: moveParts
+        };
     },
     execute: function (creep) {
         var result = creep.upgradeController(creep.room.controller);
