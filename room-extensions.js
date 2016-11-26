@@ -1,10 +1,11 @@
-var SquadManager = require('squad-manager');
+var SquadManager = require('squad-manager'),
+    SpawnManager = require('spawn-manager');
 
 Room.prototype.jpExecute = function () {
-    var creep = SquadManager.QueueCreep(room);
+    var creep = SquadManager.QueueCreep(this);
 
     if (creep) {
-        SpawnManager.Build(creep);
+        SpawnManager.Build(creep, this);
     }
 
     // TODO: Manage automated building queue
