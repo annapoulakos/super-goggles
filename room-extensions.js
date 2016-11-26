@@ -12,3 +12,6 @@ Room.prototype.jpExecute = function () {
     // TODO: Manage automated laboratory reactions
 };
 
+Room.prototype.jpAddWorker = function (type, name) {
+    SquadManager.AddWorker(this, type, name);
+};
