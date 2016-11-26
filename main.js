@@ -1,7 +1,9 @@
 require('creep-extensions');
 require('tower-extensions');
+require('room-extensions');
 
 var Utility = require('utility'),
+    StringBuilder = require('utility.strings'),
     Cleanup = require('utility.cleanup'),
     Spawn = require('utility.spawn'),
     SpawnManager = require('utility.spawn-manager'),
@@ -53,20 +55,23 @@ function make (schematic, role) {
 module.exports.loop = function () {
     Cleanup();
 
-    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
-    var donkeys = _.filter(Game.creeps, (creep) => creep.memory.role == 'donkey');
+    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner.v2');
+    var donkeys = _.filter(Game.creeps, (creep) => creep.memory.role == 'donkey.v2');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var repairers = _.filter(Game.creeps, creep => creep.memory.role == 'repairer');
-    var packHorses = _.filter(Game.creeps, creep => creep.memory.role == 'packhorse');
+    var packhorses = _.filter(Game.creeps, c => c.memory.role == 'packhorse.v2');
 
-    var creeps = _.filter(Game.creeps, (creep) => !creep.memory.isV2);
+    var creeps = _.filter(Game.creeps, creep => creep);
 
-    if (creeps.length < 13) {
+    if (creeps.length < 10) {
+        StringBuilder.log('kernel', `Creep needed ${creeps.length} / 13`);
+
         var name = '';
-        var role = 'miner';
+        var role = 'miner.v2';
         var tier = 'Tier1';
         var type = 'Worker';
+        var schematic = [];
 
         var availableEnergy = Game.rooms['W8N3'].energyAvailable;
 
@@ -78,29 +83,30 @@ module.exports.loop = function () {
             tier = 'Tier3';
         }
 
-        if (miners.length == 0) {
-            type = 'Worker'; role = 'miner';
-        } else if (miners.length >= 1 && donkeys.length < 2) {
-            type = 'Transport'; role = 'donkey';
-        } else if (miners.length == 1 && donkeys.length == 2) {
-            type = 'Worker'; role = 'miner';
-        } else if (miners.length == 2 && donkeys.length < 4) {
-            type = 'Transport'; role = 'donkey';
-        } else if (upgraders.length < 1) {
-            type = 'General'; role = 'upgrader';
-        } else if (upgraders.length >= 1 && builders.length < 1) {
-            type = 'General'; role = 'builder';
-        } else if (upgraders.length < 3) {
-            type = 'General'; role = 'upgrader';
+        if (miners.length < 2) {
+            var m = require('role.miner.v2');
+            role = 'miner.v2';
+            schematic = Utility.generateBodyFromParts(m.getOptimalBuild(Game.rooms['W8N3'].energyAvailable));
+        } else if (donkeys.length < 4) {
+            var d = require('role.donkey.v2');
+            role = 'donkey.v2';
+            schematic = Utility.generateBodyFromParts(d.getOptimalBuild(Game.rooms['W8N3'].energyAvailable));
+        } else if (builders.length < 1) {
+            role = 'builder';
+            schematic = TieredSchematics[tier]['General'];
         } else if (repairers.length < 1) {
             type = 'General'; role = 'repairer';
-        } else if (packHorses.length < 1) {
-            type = 'Transport'; role = 'packhorse';
+            schematic = TieredSchematics[tier]['General'];
+        } else if (packhorses.length < 1) {
+            var p = require('role.packhorse.v2');
+            role = 'packhorse.v2';
+            schematic = Utility.generateBodyFromParts(p.getOptimalBuild(Game.rooms['W8N3'].energyAvailable));
         } else {
             type = 'General'; role = 'upgrader';
+            schematic = TieredSchematics[tier]['General'];
         }
 
-        name = make(TieredSchematics[tier][type], role);
+        name = make(schematic, role);
 
         switch (name) {
             case '': break;
@@ -121,9 +127,13 @@ module.exports.loop = function () {
 
         if (energy[name] != available) {
             energy[name] = available;
-            //console.log('Energy: Total - ' + available + ', Containered - ' + (available - Game.rooms[name].energyAvailable));
+            var build = Game.rooms[name].energyAvailable, containered = available - build;
+            StringBuilder.log('energy', `Room ${name}: Total ${available}, Containered ${containered}, Build, ${build}`);
         }
     }
+
+    // Room Execution Loop
+    //_.filter(Game.rooms, r => r).forEach(r => r.jpExecute());
 
     // Tower Execution Loop
     _.filter(Game.structures, s => s.structureType == STRUCTURE_TOWER).forEach(t => t.jpExecute());
