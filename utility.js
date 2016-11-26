@@ -38,5 +38,15 @@ module.exports = {
             : (value > max
                 ? max
                 : value);
+    },
+    buildBest: function (role) {
+        var worker = require(`role.${role}`),
+            build = worker.getOptimalBuild(Game.rooms['W8N3'].energyAvailable),
+            parts = this.generateBodyFromParts(build);
+
+        Game.spawns['Spawn1'].createCreep(parts, undefined, {role: role});
+    },
+    killAll: function () {
+        _.filter(Game.creeps, c => c).forEach(c => c.suicide());
     }
 };
